@@ -11,6 +11,32 @@ class InitializationError(Exception):
 class TemplateRenderingError(Exception):
     pass
 
+def generate_permission_script(file_path, owner, group, mode):
+    script = f"chown {owner}:{group} {file_path}\nchmod {mode} {file_path}"
+    return script
+
+# processes files and templates
+def process_asset(asset, asset_type, assets_dir, package_root, hooks, variables=None):
+    local_asset = os.path.join(assets_dir, asset_type, asset['name'])
+
+    if asset_type == "templates":
+        content = render_template(local_asset, variables)
+    elif asset_type == "files":
+        content = None
+
+    destination_asset = os.path.join(package_root, asset['destination'].lstrip('/'))
+    os.makedirs(os.path.dirname(destination_asset), exist_ok=True)
+
+    if content is not None:
+        with open(destination_asset, 'w') as f:
+            f.write(content)
+    else:
+        shutil.copy(local_asset, destination_asset)
+
+    if {'owner', 'group', 'mode'} <= set(asset.keys()):
+        permission_script = generate_permission_script(asset['destination'], asset['owner'], asset['group'], asset['mode'])
+        hooks['post-install'].append(permission_script)
+
 def load_yaml_file(file_path):
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"YAML file '{file_path}' not found.")

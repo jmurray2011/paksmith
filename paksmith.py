@@ -2,7 +2,7 @@ import shutil
 import tempfile
 import argparse
 import os
-from utils import load_yaml_file, render_template, initialize, validate_manifest
+from utils import load_yaml_file, render_template, initialize, validate_manifest, generate_permission_script, process_asset
 
 def log(verbose, message):
     if verbose:
@@ -41,27 +41,14 @@ def main(project_dir, verbose=False, destination=None):
             log(verbose, f"Processing task: {task['name']}")
 
             # place files into the .deb filestructure according to their file['destination']
-            # file permissions will be root:root by default and should be handled by
-            # post-install hook scripts
             if 'files' in task:
                 for file in task['files']:
-                    local_file = os.path.join(assets_dir, "files", file['name'])
-                    destination_file = os.path.join(package_root, file['destination'].lstrip('/'))
-                    os.makedirs(os.path.dirname(destination_file), exist_ok=True)
-                    shutil.copy(local_file, destination_file)
+                    process_asset(file, "files", assets_dir, package_root, hooks)
 
             # place files into the .deb filestructure according to their template['destination']
-            # file permissions will be root:root by default and should be handled by
-            # post-install hook scripts
             if 'templates' in task:
                 for template in task['templates']:
-                    local_template = os.path.join(assets_dir, "templates", template['name'])
-                    
-                    rendered_template = render_template(local_template, variables)
-                    destination_template = os.path.join(package_root, template['destination'].lstrip('/'))
-                    os.makedirs(os.path.dirname(destination_template), exist_ok=True)
-                    with open(destination_template, 'w') as f:
-                        f.write(rendered_template)
+                    process_asset(template, "templates", assets_dir, package_root, hooks, variables)
 
             if 'scripts' in task:
                 for script in task['scripts']:

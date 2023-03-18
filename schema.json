@@ -10,15 +10,42 @@
           "type": "object",
           "properties": {
             "name": {"type": "string"},
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {"type": "string"},
+                  "destination": {"type": "string"},
+                  "owner": {"type": "string"},
+                  "group": {"type": "string"},
+                  "mode": {"type": "string"}
+                },
+                "required": ["name", "destination"],
+                "dependencies": {
+                  "owner": ["group", "mode"],
+                  "group": ["owner", "mode"],
+                  "mode": ["owner", "group"]
+                }
+              }
+            },
             "templates": {
               "type": "array",
               "items": {
                 "type": "object",
                 "properties": {
                   "name": {"type": "string"},
-                  "destination": {"type": "string"}
+                  "destination": {"type": "string"},
+                  "owner": {"type": "string"},
+                  "group": {"type": "string"},
+                  "mode": {"type": "string"}
                 },
-                "required": ["name", "destination"]
+                "required": ["name", "destination"],
+                "dependencies": {
+                  "owner": ["group", "mode"],
+                  "group": ["owner", "mode"],
+                  "mode": ["owner", "group"]
+                }
               }
             },
             "scripts": {
@@ -45,5 +72,4 @@
       }
     },
     "required": ["name", "version", "tasks"]
-  }
-  
+}
