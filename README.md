@@ -116,7 +116,7 @@ Each task must have a unique name, which is specified under the ```name``` key.
 
 3. Add files and templates:
 
-For each task, you can specify the files and templates that need to be placed in the package. To do this, use the ```files``` and ```templates``` keys under each task:
+For each task, you can specify the files to be placed (and templates to be rendered, then placed) in the package. To do this, use the ```files``` and ```templates``` keys under each task:
 
 ```yaml
 tasks:
@@ -129,7 +129,9 @@ tasks:
         destination: /etc/template1.conf
 ```
 
-For each file or template, you need to provide the following information:```name```: The name of the file or template (including its extension) as it appears in your project's assets directory.```destination```: The path where the file or template should be placed in the package.
+For each file or template, you need to provide the following information:
+- ```name```: The name of the file or template (including its extension) as it appears in your project's assets directory.
+- ```destination```: The path where the file or template should be placed in the package.
 
 4. Specify optional file and template permissions:
 
@@ -156,7 +158,8 @@ These fields will generate a post-install hook script that uses ```chown``` and 
 
 5. Add scripts:
 
-For each task, you can also include scripts that run during different stages of the package installation or uninstallation process. To add a script, use the ```scripts``` key under each task:yaml
+For each task, you can also include scripts that run during different stages of the package installation or uninstallation process. To add a script, use the ```scripts``` key under each task:
+
 ```yaml
 tasks:
   - name: Task 1
