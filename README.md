@@ -31,6 +31,11 @@ project/
 ├── manifest.yml
 └── vars.yml
 ```
+- `manifest.yml` contains the package information, tasks, files, templates, and scripts.
+- `vars.yml` contains variables that can be used in Jinja2 templates.
+- `assets/files/` contains files that will be included in the package.
+- `assets/templates/` contains Jinja2 templates that will be rendered and included in the package.
+
 2. Add `files` and `templates` as needed.
 
 3. Edit the `manifest.yml` and `vars.yml` files as needed.
@@ -55,10 +60,10 @@ tasks:
 - name: Task 1
  files:
    - name: example.txt
-     destination: /opt/example/
+     destination: /opt/example/example.txt
  templates:
    - name: example.conf.j2
-     destination: /etc/example/
+     destination: /etc/example/example.conf
  scripts:
    - hook: post-install
      content: echo "Task 1 post-install script"
@@ -78,23 +83,6 @@ The `vars.yml` file contains variables that can be used in Jinja2 templates. Her
 variable1: value1
 variable2: value2
 ```
-
-## Project structure
-After initializing a new project directory with example files, you will have the following structure:
-
-```bash
-project/
-├── assets/
-│   ├── files/
-│   └── templates/
-├── manifest.yml
-└── vars.yml
-```
-
-- `manifest.yml` contains the package information, tasks, files, templates, and scripts.
-- `vars.yml` contains variables that can be used in Jinja2 templates.
-- `assets/files/` contains files that will be included in the package.
-- `assets/templates/` contains Jinja2 templates that will be rendered and included in the package.
 
 ## License
 
