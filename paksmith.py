@@ -32,6 +32,9 @@ def main(project_dir, verbose=False, destination=None):
         for task in manifest['tasks']:
             log(verbose, f"Processing task: {task['name']}")
 
+            # place files into the .deb filestructure according to their file['destination']
+            # file permissions will be root:root by default and should be handled by
+            # post-install hook scripts
             if 'files' in task:
                 for file in task['files']:
                     local_file = os.path.join(assets_dir, "files", file['name'])
@@ -66,10 +69,11 @@ def main(project_dir, verbose=False, destination=None):
                     elif 'content' in script:
                         script_content = script['content']
 
-                    # add script data to corresponding hooks (pre/post install/uninstall)
+                    # add script data to corresponding hook (pre/post install/uninstall)
                     if script_content:
                         hooks[hook].append(script_content)
 
+        # build the fpm command
         fpm_command = f"fpm -s dir -t deb -n {package_name} -v {package_version}"
         for hook, scripts in hooks.items():
             if scripts:
@@ -79,9 +83,12 @@ def main(project_dir, verbose=False, destination=None):
                         f.write(f"{script}\n")
                 fpm_command += f" --{hook} {hook_script}"
 
+        # add dependencies if present
         if dependencies:
             for dep in dependencies:
                 fpm_command += f" -d {dep}"
+        
+        # if specified via cli argument, direct fpm to place the file in a specific directory
         if destination:
             deb_file = os.path.join(destination, f"{package_name}_{package_version}_amd64.deb")
             if os.path.isfile(deb_file):
