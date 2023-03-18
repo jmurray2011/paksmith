@@ -11,8 +11,8 @@ This script is a tool for building .deb packages from a manifest file and a set 
 ## Installation
 
 1. Install Python 3.6 or higher if you don't have it already.
-2. Install Jinja2: `pip install Jinja2`
-3. Install FPM: https://fpm.readthedocs.io/en/latest/installing.html
+2. Install Jinja2: `pip install jinja2`
+3. Install FPM: https://fpm.readthedocs.io/en/v1.15.1/installation.html
 
 ## Usage
 
