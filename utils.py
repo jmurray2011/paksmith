@@ -3,31 +3,44 @@ import os
 import shutil
 import jsonschema
 import json
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+
+class InitializationError(Exception):
+    pass
+
+class TemplateRenderingError(Exception):
+    pass
 
 def load_yaml_file(file_path):
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"YAML file '{file_path}' not found.")
+
     with open(file_path, 'r') as stream:
         try:
             return yaml.safe_load(stream)
         except yaml.YAMLError as exc:
-            print(exc)
-            exit(1)
+            raise ValueError(f"Error parsing YAML file '{file_path}': {exc}")
 
 def render_template(template_path, variables):
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(f"Template file '{template_path}' not found.")
+
     template_dir = os.path.dirname(template_path)
     template_name = os.path.basename(template_path)
     
     env = Environment(loader=FileSystemLoader(template_dir))
-    template = env.get_template(template_name)
+    
+    try:
+        template = env.get_template(template_name)
+    except TemplateNotFound:
+        raise TemplateRenderingError(f"Template '{template_name}' not found in '{template_dir}'")
     
     return template.render(**variables)
 
 def initialize(project_dir):
     if os.path.exists(project_dir):
-        raise Exception(f"Directory '{project_dir}' already exists. Cannot initialize project there.")
+        raise InitializationError(f"Directory '{project_dir}' already exists. Cannot initialize project there.")
     os.makedirs(project_dir)
-
-    # Create assets/files and assets/templates directories
     assets_dir = os.path.join(project_dir, "assets")
     os.makedirs(os.path.join(assets_dir, "files"))
     os.makedirs(os.path.join(assets_dir, "templates"))

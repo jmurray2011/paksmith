@@ -94,7 +94,7 @@ def main(project_dir, verbose=False, destination=None):
             if os.path.isfile(deb_file):
                 log(verbose, f"Overwriting existing .deb file: {deb_file}")
                 os.remove(deb_file)
-            fpm_command += f" -p {destination}"
+            fpm_command += f" -p '{destination}'"
 
         fpm_command += f" -C {package_root}"
         for task in manifest['tasks']:
