@@ -74,6 +74,13 @@ tasks:
    - hook: post-install
      template: script2.sh.j2
 ```
+### `manifest.yml` validation
+
+You can validate the structure of the `manifest.yml` by running:
+
+```bash
+python paksmith.py --validate /path/to/your/manifest.yml
+```
 
 ## vars.yml format
 
@@ -83,7 +90,6 @@ The `vars.yml` file contains variables that can be used in Jinja2 templates. Her
 variable1: value1
 variable2: value2
 ```
-
 ## License
 
 This project is released under the MIT License. See the [LICENSE](LICENSE) file for details.

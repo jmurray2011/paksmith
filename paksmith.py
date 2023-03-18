@@ -8,6 +8,14 @@ def log(verbose, message):
     if verbose:
         print(message)
 
+def validate_manifest_file(manifest_file):
+    try:
+        manifest = load_yaml_file(manifest_file)
+        validate_manifest(manifest)
+        print("Manifest file is valid.")
+    except Exception as e:
+        print(f"Manifest validation failed: {e}")
+
 def main(project_dir, verbose=False, destination=None):
     manifest_file = os.path.join(project_dir, "manifest.yml")
     vars_file = os.path.join(project_dir, "vars.yml")
@@ -120,12 +128,15 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--init', help="Initialize example project in the specified location")
     parser.add_argument('-v', '--verbose', action='store_true', help="Enable verbose output")
     parser.add_argument('-p', '--project_dir', help="Path to the project directory containing vars.yml, manifest.yml, and assets")
+    parser.add_argument('--validate', help="Validate a manifest file")
+
     args = parser.parse_args()
 
     if args.init:
         initialize(args.init)
+    elif args.validate:
+        validate_manifest_file(args.validate)
     elif args.project_dir:
         main(args.project_dir, verbose=args.verbose, destination=args.destination)
     else:
-        parser.error("you must provide either '--init' or '--project_dir'.")
-
+        print("No action specified. Use '-h' or '--help' for help.")

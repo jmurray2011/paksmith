@@ -2,64 +2,48 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
-        "name": {"type": "string"},
-        "version": {"type": "string"},
-        "dependencies": {
-            "type": "array",
-            "items": {"type": "string"}
-        },
-        "tasks": {
-            "type": "array",
-            "items": {
+      "name": {"type": "string"},
+      "version": {"type": "string"},
+      "tasks": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {"type": "string"},
+            "templates": {
+              "type": "array",
+              "items": {
                 "type": "object",
                 "properties": {
-                    "name": {"type": "string"},
-                    "description": {"type": "string"},
-                    "files": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "name": {"type": "string"},
-                                "description": {"type": "string"},
-                                "destination": {"type": "string"},
-                            },
-                            "required": ["name", "destination"]
-                        }
-                    },
-                    "templates": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "name": {"type": "string"},
-                                "description": {"type": "string"},
-                                "destination": {"type": "string"},
-                            },
-                            "required": ["name", "destination"]
-                        }
-                    },
-                    "scripts": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "hook": {"type": "string"},
-                                "name": {"type": "string"},
-                                "template": {"type": "string"},
-                                "content": {"type": "string"}
-                            },
-                            "oneOf": [
-                                {"required": ["name"]},
-                                {"required": ["template"]},
-                                {"required": ["content"]}
-                            ]
-                        }
-                    }
+                  "name": {"type": "string"},
+                  "destination": {"type": "string"}
                 },
-                "required": ["name"]
+                "required": ["name", "destination"]
+              }
+            },
+            "scripts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "hook": {"type": "string", "enum": ["pre-install", "post-install", "pre-uninstall", "post-uninstall"]},
+                  "name": {"type": "string"},
+                  "template": {"type": "string"},
+                  "content": {"type": "string"}
+                },
+                "required": ["hook"],
+                "oneOf": [
+                  {"required": ["name"]},
+                  {"required": ["template"]},
+                  {"required": ["content"]}
+                ]
+              }
             }
+          },
+          "required": ["name"]
         }
+      }
     },
     "required": ["name", "version", "tasks"]
-}
+  }
+  
