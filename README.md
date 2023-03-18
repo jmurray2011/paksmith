@@ -45,7 +45,7 @@ project/
 python paksmith.py --project_dir /path/to/your/project [--destination /path/to/output] [--verbose]
 ```
 
-This will generate a .deb package in the specified destination directory or in the current working directory if the destination is not provided.
+This will generate a .deb package in the specified destination directory or in the current working directory if the destination is not provided. Note that file permissions (for both files and templates placed by the package) will be root:root by default. Appropriate permissions should be handled by hook scripts.
 
 ## manifest.yml format
 

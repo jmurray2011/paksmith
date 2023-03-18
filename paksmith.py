@@ -42,9 +42,13 @@ def main(project_dir, verbose=False, destination=None):
                     os.makedirs(os.path.dirname(destination_file), exist_ok=True)
                     shutil.copy(local_file, destination_file)
 
+            # place files into the .deb filestructure according to their template['destination']
+            # file permissions will be root:root by default and should be handled by
+            # post-install hook scripts
             if 'templates' in task:
                 for template in task['templates']:
                     local_template = os.path.join(assets_dir, "templates", template['name'])
+                    
                     rendered_template = render_template(local_template, variables)
                     destination_template = os.path.join(package_root, template['destination'].lstrip('/'))
                     os.makedirs(os.path.dirname(destination_template), exist_ok=True)
