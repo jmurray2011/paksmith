@@ -3,6 +3,10 @@ import os
 import shutil
 import jsonschema
 import json
+from yaml import MarkedYAMLError
+from jinja2 import Environment, FileSystemLoader, meta
+from jsonschema import Draft7Validator
+
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 class InitializationError(Exception):
@@ -38,14 +42,15 @@ def process_asset(asset, asset_type, assets_dir, package_root, hooks, variables=
         hooks['post-install'].append(permission_script)
 
 def load_yaml_file(file_path):
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"YAML file '{file_path}' not found.")
-
-    with open(file_path, 'r') as stream:
-        try:
+    try:
+        with open(file_path, 'r') as stream:
             return yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            raise ValueError(f"Error parsing YAML file '{file_path}': {exc}")
+    except MarkedYAMLError as exc:
+        print(f"YAML error on line {exc.problem_mark.line + 1}: {exc.problem}")
+        exit(1)
+    except Exception as exc:
+        print(f"Error while loading YAML file: {exc}")
+        exit(1)
 
 def render_template(template_path, variables):
     if not os.path.exists(template_path):
@@ -126,17 +131,58 @@ email:
         f.write(example_vars)
 
 def validate_manifest(manifest_data, schema_file="schema.json"):
+    # Load the schema
     with open(schema_file, "r") as f:
         schema = json.load(f)
 
-    try:
-        jsonschema.validate(instance=manifest_data, schema=schema)
-    except jsonschema.ValidationError as e:
-        print(f"Validation error: {e.message}. Please modify your manifest file accordingly")
-        print(f"Error in {list(e.absolute_path)}")
-        exit(1)
-    except jsonschema.SchemaError as e:
-        print(f"Schema error: {e}")
+    # Create a validator
+    validator = Draft7Validator(schema)
+
+    # Check if the manifest is valid
+    errors = sorted(validator.iter_errors(manifest_data), key=lambda e: e.path)
+
+    if errors:
+        for error in errors:
+            task_name = ""
+            if "tasks" in error.absolute_path and isinstance(error.instance, dict) and "name" in error.instance:
+                task_name = f" in task '{error.instance['name']}'"
+
+            print(f"Validation error{task_name}: {error.message}. Please modify your manifest file accordingly")
         exit(1)
 
-    print(f"schema passes validation")
+def validate_template_variables(manifest_data, vars_data, assets_dir):
+  env = Environment(loader=FileSystemLoader(assets_dir))
+
+  for task in manifest_data['tasks']:
+      if 'templates' in task:
+          for template in task['templates']:
+              template_name = template['name']
+              try:
+                  # Load the template
+                  tmpl = env.get_template(template_name)
+
+                  # Find the variables used in the template
+                  ast = env.parse(tmpl.source)
+                  used_vars = meta.find_undeclared_variables(ast)
+
+                  # Check if all used variables are present in the vars_data
+                  for var in used_vars:
+                      if not is_var_in_data(var, vars_data):
+                          raise ValueError(f"Variable '{var}' in template '{template_name}' is not defined in vars.yml")
+
+              except Exception as e:
+                  print(f"Error validating template '{template_name}': {e}")
+                  exit(1)
+
+def is_var_in_data(var, data):
+    if isinstance(data, dict):
+        if var in data:
+            return True
+        for key, value in data.items():
+            if is_var_in_data(var, value):
+                return True
+    elif isinstance(data, (list, tuple)):
+        for item in data:
+            if is_var_in_data(var, item):
+                return True
+    return False

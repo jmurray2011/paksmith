@@ -2,26 +2,40 @@ import shutil
 import tempfile
 import argparse
 import os
-from utils import load_yaml_file, render_template, initialize, validate_manifest, generate_permission_script, process_asset
+from utils import load_yaml_file, render_template, initialize, validate_manifest, validate_template_variables, process_asset
 
 def log(verbose, message):
     if verbose:
         print(message)
 
-def validate_manifest_file(manifest_file):
+def validate_project(project_dir):
+    manifest_file = os.path.join(project_dir, "manifest.yml")
+    vars_file = os.path.join(project_dir, "vars.yml")
+    assets_dir = os.path.join(project_dir, "assets")
+
     try:
         manifest = load_yaml_file(manifest_file)
+        variables = load_yaml_file(vars_file)
         validate_manifest(manifest)
-        print("Manifest file is valid.")
+        # validate_template_variables(manifest, variables, assets_dir)
+        print("Project validation passed.")
     except Exception as e:
-        print(f"Manifest validation failed: {e}")
+        print(f"Project validation failed: {e}")
+
 
 def main(project_dir, verbose=False, destination=None):
     manifest_file = os.path.join(project_dir, "manifest.yml")
     vars_file = os.path.join(project_dir, "vars.yml")
 
     manifest = load_yaml_file(manifest_file)
-    variables = load_yaml_file(vars_file)
+    # variables = load_yaml_file(vars_file)
+
+    # Validate the manifest schema
+    # validate_manifest(manifest)
+
+    # Validate the template variables
+    assets_dir = os.path.join(project_dir, "assets")
+    # validate_template_variables(manifest, variables, assets_dir)
 
     package_name = manifest['name']
     package_version = manifest['version']
@@ -115,14 +129,14 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--init', help="Initialize example project in the specified location")
     parser.add_argument('-v', '--verbose', action='store_true', help="Enable verbose output")
     parser.add_argument('-p', '--project_dir', help="Path to the project directory containing vars.yml, manifest.yml, and assets")
-    parser.add_argument('--validate', help="Validate a manifest file")
+    parser.add_argument('--validate', help="Validate the manifest file in the specified project directory")
 
     args = parser.parse_args()
 
     if args.init:
         initialize(args.init)
     elif args.validate:
-        validate_manifest_file(args.validate)
+        validate_project(args.validate)
     elif args.project_dir:
         main(args.project_dir, verbose=args.verbose, destination=args.destination)
     else:
