@@ -8,6 +8,11 @@ def log(verbose, message):
     if verbose:
         print(message)
 
+def create_parser():
+    parser = argparse.ArgumentParser(description="Paksmith - A tool for building .deb packages from a manifest file and a set of assets")
+    subparsers = parser.add_subparsers(title="commands", dest="command", help="Available commands", required=True)
+    return parser, subparsers
+
 def validate_project(project_dir):
     manifest_file = os.path.join(project_dir, "manifest.yml")
     vars_file = os.path.join(project_dir, "vars.yml")
@@ -127,20 +132,26 @@ def main(project_dir, verbose=False, destination=None):
         log(verbose, "Package built successfully.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Build a .deb package from a manifest file")
-    parser.add_argument('-d', '--destination', help="Specify the destination for the .deb package")
-    parser.add_argument('-i', '--init', help="Initialize example project in the specified location")
-    parser.add_argument('-v', '--verbose', action='store_true', help="Enable verbose output")
-    parser.add_argument('-p', '--project_dir', help="Path to the project directory containing vars.yml, manifest.yml, and assets")
-    parser.add_argument('--validate', help="Validate the manifest file in the specified project directory")
+    parser, subparsers = create_parser()
+    init_parser = subparsers.add_parser("init", help="Initialize a new project directory with example files")
+    init_parser.add_argument("init_dir", metavar="DIR", help="Path to the directory where the project will be initialized")
+
+    build_parser = subparsers.add_parser("build", help="Build a .deb package from the project directory")
+    build_parser.add_argument("project_dir", metavar="DIR", help="Path to the project directory containing manifest.yml and assets")
+    build_parser.add_argument("-d", "--destination", metavar="DIR", help="Path to the directory where the .deb package will be saved")
+    build_parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
+
+    validate_parser = subparsers.add_parser("validate", help="Validate the project structure and manifest file")
+    validate_parser.add_argument("validate_dir", metavar="DIR", help="Path to the project directory to validate")
+
 
     args = parser.parse_args()
 
-    if args.init:
+    if args.command == "init":
         initialize(args.init)
-    elif args.validate:
-        validate_project(args.validate)
-    elif args.project_dir:
+    elif args.command == "validate_dir":
+        validate_project(args.validate_dir)
+    elif args.command == "build":
         main(args.project_dir, verbose=args.verbose, destination=args.destination)
     else:
         print("No action specified. Use '-h' or '--help' for help.")
