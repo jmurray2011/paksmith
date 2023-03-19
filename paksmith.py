@@ -23,6 +23,7 @@ def validate_project(project_dir):
         print(f"Project validation failed: {e}")
 
 def main(project_dir, verbose=False, destination=None):
+    validate_project(project_dir)
     manifest_template = os.path.join(project_dir, "manifest.yml.j2")
     vars_file = os.path.join(project_dir, "vars.yml")
     variables = load_yaml_file(vars_file)
