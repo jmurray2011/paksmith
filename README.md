@@ -19,22 +19,29 @@ This script is a tool for building .deb packages from a manifest file and a set 
 1. Initialize a new project directory with example files:
 
 ```bash
-python paksmith.py --init /path/to/your/project
+python paksmith.py init /path/to/your/project
 ```
 
 This will create a project directory with the following structure:
 ```bash
 project/
-├── assets/
-│ ├── files/
-│ └── templates/
+├── assets
+│   ├── files
+│   │   └── index.html
+│   └── templates
+│       └── hello_world.conf.j2
 ├── manifest.yml
+├── manifest.yml.j2
 └── vars.yml
 ```
+- This is a working project that can be used via `python paksmith.py build /path/to/your/project`
 - `manifest.yml` contains the package information, tasks, files, templates, and scripts.
+- `manifest.yml.j2` is an example `manifest.yml` template. If this file is present it will be automatically rendered with variables from `vars.yml`, and any existing `manifest.yml` will be overwritten.
 - `vars.yml` contains variables that can be used in Jinja2 templates.
 - `assets/files/` contains files that will be included in the package.
 - `assets/templates/` contains Jinja2 templates that will be rendered and included in the package.
+
+
 
 2. Add `files` and `templates` as needed.
 
@@ -42,10 +49,10 @@ project/
 
 4. Build the .deb package:
 ```bash
-python paksmith.py --project_dir /path/to/your/project [--destination /path/to/output] [--verbose]
+python paksmith.py build /path/to/your/project [--destination /path/to/output] [--verbose]
 ```
 
-This will generate a .deb package in the specified destination directory or in the current working directory if the destination is not provided. Note that file permissions (for both files and templates placed by the package) will be root:root by default. Appropriate permissions should be handled by hook scripts.
+This will generate a .deb package in the specified destination directory or in the current working directory if the destination is not provided. Note that file permissions (for both files and templates placed by the package) will be `root:root` by default.
 
 ## manifest.yml format
 
@@ -64,6 +71,9 @@ tasks:
  templates:
    - name: example.conf.j2
      destination: /etc/example/example.conf
+     owner: ubuntu
+     group: ubuntu
+     mode: g+rwx
  scripts:
    - hook: post-install
      content: echo "Task 1 post-install script"
@@ -74,12 +84,22 @@ tasks:
    - hook: post-install
      template: script2.sh.j2
 ```
-### `manifest.yml` validation
+
+Note the optional:
+```yaml
+     owner: ubuntu
+     group: ubuntu
+     mode: g+rwx
+```
+
+When these are present (all three must be to pass validation), `paksmith` will automatically create an additional `post-install` script that sets permissions you've specified.
+
+## Manifest validation
 
 You can validate the project by running:
 
 ```bash
-python paksmith.py --validate /path/to/your/project
+python paksmith.py validate /path/to/your/project
 ```
 
 ## vars.yml format
@@ -90,7 +110,7 @@ The `vars.yml` file contains variables that can be used in Jinja2 templates. Her
 variable1: value1
 variable2: value2
 ```
-# Considerations
+# Creating `manifest.yml`
 
 To create a ```manifest.yml``` file for your packaging project, you'll need to follow a specific structure and include the necessary information to build the package. This file is crucial for defining how the package is built and the tasks involved in the process. 
 
@@ -184,13 +204,13 @@ Make sure to use only one of these keys (```name```, ```template```, or ```conte
 Before using the manifest file to build the package, it's essential to validate its structure and content against the schema. You can validate the project by running:
 
 ```bash
-python paksmith.py --validate /path/to/your/project
+python paksmith.py validate /path/to/your/project
 ```
 
 ## 7. Considerations:
 
 When creating a manifest file, keep the following considerations in mind:
-
+- Determine whether you need a `manifest.yml.j2` template. By default if this file exists it will be rendered at runtime using variables in `vars.yml`. It will overwrite any existing `manifest.yml`
 - Ensure that the task names are unique and descriptive, as they help you identify the purpose of each task.
 - Organize tasks in a logical order to reflect the flow of the package building process. This makes the manifest file more readable and maintainable.
 - Be mindful of file and template destinations, as they determine where the files will be placed in the package. Ensure that these paths are valid and conform to the package's intended structure.

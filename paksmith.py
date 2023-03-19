@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 import shutil
 import tempfile
 import argparse
@@ -148,7 +150,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.command == "init":
-        initialize(args.init)
+        initialize(args.init_dir)
     elif args.command == "validate_dir":
         validate_project(args.validate_dir)
     elif args.command == "build":
