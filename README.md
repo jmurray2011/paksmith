@@ -76,10 +76,10 @@ tasks:
 ```
 ### `manifest.yml` validation
 
-You can validate the structure of the `manifest.yml` by running:
+You can validate the project by running:
 
 ```bash
-python paksmith.py --validate /path/to/your/manifest.yml
+python paksmith.py --validate /path/to/your/project
 ```
 
 ## vars.yml format
@@ -181,10 +181,10 @@ Make sure to use only one of these keys (```name```, ```template```, or ```conte
 
 ## 6. Validate the manifest file:
 
-Before using the manifest file to build the package, it's essential to validate its structure and content against the schema. You can validate the structure of the `manifest.yml` by running:
+Before using the manifest file to build the package, it's essential to validate its structure and content against the schema. You can validate the project by running:
 
 ```bash
-python paksmith.py --validate /path/to/your/manifest.yml
+python paksmith.py --validate /path/to/your/project
 ```
 
 ## 7. Considerations:
