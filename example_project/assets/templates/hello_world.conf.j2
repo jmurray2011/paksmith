@@ -1,0 +1,12 @@
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/hello-world
+
+    ErrorLog ${APACHE_LOG_DIR}/hello-world-error.log
+    CustomLog ${APACHE_LOG_DIR}/hello-world-access.log combined
+
+    <Directory "/var/www/hello-world">
+        AllowOverride None
+        Require all granted
+    </Directory>
+</VirtualHost>

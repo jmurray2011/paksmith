@@ -5,17 +5,18 @@ dependencies:
 tasks:
   - name: Setup Apache site
     files:
-      - name: hello_world.html
-        destination: {{ document_root }}/html/index.html
+      - name: index.html
+        destination: {{ document_root }}/index.html
     templates:
       - name: hello_world.conf.j2
-        destination: /etc/apache2/sites-available/hello_world.conf
+        destination: /tmp/hello_world.conf
     scripts:
       - hook: post-install
         content: |
           #!/bin/bash
           
           a2dissite 000-default
+          sudo cp /tmp/hello_world.conf /etc/apache2/sites-available/
           a2ensite hello_world
           systemctl reload apache2
           echo "Hello, world! webserver is now up and running."
