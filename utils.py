@@ -1,13 +1,11 @@
-import yaml
 import os
+import json
+import yaml
 import shutil
 import jsonschema
-import json
 from yaml import MarkedYAMLError
-from jinja2 import Environment, FileSystemLoader, meta, Template
 from jsonschema import Draft7Validator
-
-from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+from jinja2 import Environment, FileSystemLoader, meta, Template, TemplateNotFound
 
 class InitializationError(Exception):
     pass
