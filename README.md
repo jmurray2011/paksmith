@@ -92,9 +92,11 @@ variable2: value2
 ```
 # Considerations
 
-To create a ```manifest.yml``` file for your packaging project, you'll need to follow a specific structure and include the necessary information to build the package. This file is crucial for defining how the package is built and the tasks involved in the process. Here's a step-by-step guide on how to create a ```manifest.yml``` file, including the different options and considerations to take into account:
+To create a ```manifest.yml``` file for your packaging project, you'll need to follow a specific structure and include the necessary information to build the package. This file is crucial for defining how the package is built and the tasks involved in the process. 
 
-1. Define basic package information:
+Here's a step-by-step guide on how to create a ```manifest.yml``` file, including the different options and considerations to take into account:
+
+## 1. Define basic package information:
 
 At the beginning of the ```manifest.yml``` file, specify the package name and version:
 ```yaml
@@ -102,7 +104,7 @@ name: example-package
 version: 1.0.0
 ```
 
-2. Define tasks:
+## 2. Define tasks:
 
 Tasks are the building blocks of your package. They are used to define the actions that need to be performed when building the package, such as placing files and templates or running scripts. Create a list of tasks under the ```tasks``` key:
 
@@ -114,9 +116,9 @@ tasks:
 
 Each task must have a unique name, which is specified under the ```name``` key.
 
-3. Add files and templates:
+## 3. Add files and templates:
 
-For each task, you can specify the files and templates that need to be placed in the package. To do this, use the ```files``` and ```templates``` keys under each task:
+For each task, you can specify the files to be placed (and templates to be rendered, then placed) in the package. To do this, use the ```files``` and ```templates``` keys under each task:
 
 ```yaml
 tasks:
@@ -129,9 +131,11 @@ tasks:
         destination: /etc/template1.conf
 ```
 
-For each file or template, you need to provide the following information:```name```: The name of the file or template (including its extension) as it appears in your project's assets directory.```destination```: The path where the file or template should be placed in the package.
+For each file or template, you need to provide the following information:
+- ```name```: The name of the file or template (including its extension) as it appears in your project's assets directory.
+- ```destination```: The path where the file or template should be placed in the package.
 
-4. Specify optional file and template permissions:
+## 4. Specify optional file and template permissions:
 
 You can also set optional owner, group, and mode permissions for files and templates. If you want to use these options, you must provide all three fields:
 
@@ -154,9 +158,10 @@ tasks:
 
 These fields will generate a post-install hook script that uses ```chown``` and ```chmod``` to apply the specified permissions.
 
-5. Add scripts:
+## 5. Add scripts:
 
-For each task, you can also include scripts that run during different stages of the package installation or uninstallation process. To add a script, use the ```scripts``` key under each task:yaml
+For each task, you can also include scripts that run during different stages of the package installation or uninstallation process. To add a script, use the ```scripts``` key under each task:
+
 ```yaml
 tasks:
   - name: Task 1
@@ -174,7 +179,7 @@ For each script, you need to provide the following information:
 
 Make sure to use only one of these keys (```name```, ```template```, or ```content```) for each script.
 
-6. Validate the manifest file:
+## 6. Validate the manifest file:
 
 Before using the manifest file to build the package, it's essential to validate its structure and content against the schema. You can validate the structure of the `manifest.yml` by running:
 
@@ -182,7 +187,7 @@ Before using the manifest file to build the package, it's essential to validate 
 python paksmith.py --validate /path/to/your/manifest.yml
 ```
 
-7. Considerations:
+## 7. Considerations:
 
 When creating a manifest file, keep the following considerations in mind:
 
