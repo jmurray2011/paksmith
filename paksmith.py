@@ -53,6 +53,10 @@ def main(project_dir, verbose=False, destination=None):
         for task in manifest['tasks']:
             log(verbose, f"Processing task: {task['name']}")
 
+            # setup hook logging
+            for hook in hooks:
+                hooks[hook].append(f'#!/bin/bash\n\nexec > >(tee -a /var/log/{package_name}-{hook}.log) 2>&1')
+
             # place files into the .deb filestructure according to their file['destination']
             if 'files' in task:
                 for file in task['files']:
