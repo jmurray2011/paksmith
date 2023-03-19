@@ -2,7 +2,7 @@ import shutil
 import tempfile
 import argparse
 import os
-from utils import load_yaml_file, render_template, initialize, validate_manifest, validate_template_variables, process_asset
+from utils import load_yaml_file, render_template, initialize, render_manifest_template, validate_manifest, process_asset
 
 def log(verbose, message):
     if verbose:
@@ -22,20 +22,18 @@ def validate_project(project_dir):
     except Exception as e:
         print(f"Project validation failed: {e}")
 
-
 def main(project_dir, verbose=False, destination=None):
-    manifest_file = os.path.join(project_dir, "manifest.yml")
+    manifest_template = os.path.join(project_dir, "manifest.yml.j2")
     vars_file = os.path.join(project_dir, "vars.yml")
+    variables = load_yaml_file(vars_file)
+
+    # Check for manifest template and render it
+    manifest_file = os.path.join(project_dir, "manifest.yml")
+    if os.path.exists(manifest_template):
+        render_manifest_template(manifest_template, variables, manifest_file)
 
     manifest = load_yaml_file(manifest_file)
-    # variables = load_yaml_file(vars_file)
-
-    # Validate the manifest schema
-    # validate_manifest(manifest)
-
-    # Validate the template variables
     assets_dir = os.path.join(project_dir, "assets")
-    # validate_template_variables(manifest, variables, assets_dir)
 
     package_name = manifest['name']
     package_version = manifest['version']

@@ -1,0 +1,2 @@
+server_name: hello-world.local
+document_root: /var/www/hello-world

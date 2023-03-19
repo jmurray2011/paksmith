@@ -1,0 +1,21 @@
+name: hello-world-webserver
+version: 1.0.0
+dependencies:
+  - apache2
+tasks:
+  - name: Setup Apache site
+    files:
+      - name: hello_world.html
+        destination: {{ document_root }}/html/index.html
+    templates:
+      - name: hello_world.conf.j2
+        destination: /etc/apache2/sites-available/hello_world.conf
+    scripts:
+      - hook: post-install
+        content: |
+          #!/bin/bash
+          
+          a2dissite 000-default
+          a2ensite hello_world
+          systemctl reload apache2
+          echo "Hello, world! webserver is now up and running."

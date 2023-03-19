@@ -4,7 +4,7 @@ import shutil
 import jsonschema
 import json
 from yaml import MarkedYAMLError
-from jinja2 import Environment, FileSystemLoader, meta
+from jinja2 import Environment, FileSystemLoader, meta, Template
 from jsonschema import Draft7Validator
 
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
@@ -52,6 +52,13 @@ def load_yaml_file(file_path):
         print(f"Error while loading YAML file: {exc}")
         exit(1)
 
+def render_manifest_template(manifest_template, variables, output_file):
+    with open(manifest_template, "r") as template_file:
+        template_content = template_file.read()
+    rendered_content = Template(template_content).render(variables)
+    with open(output_file, "w") as manifest_file:
+        manifest_file.write(rendered_content)
+
 def render_template(template_path, variables):
     if not os.path.exists(template_path):
         raise FileNotFoundError(f"Template file '{template_path}' not found.")
@@ -71,64 +78,19 @@ def render_template(template_path, variables):
 def initialize(project_dir):
     if os.path.exists(project_dir):
         raise InitializationError(f"Directory '{project_dir}' already exists. Cannot initialize project there.")
-    os.makedirs(project_dir)
-    assets_dir = os.path.join(project_dir, "assets")
-    os.makedirs(os.path.join(assets_dir, "files"))
-    os.makedirs(os.path.join(assets_dir, "templates"))
-
-    # Save example manifest.yml
-    example_manifest = '''
-name: example-package
-version: 1.0.0
-tasks:
-  - name: Task 1
-    templates:
-      - name: template1.j2
-        destination: /etc/template1.conf
-    scripts:
-      - hook: post-install
-        name: script1.sh
-  - name: Task 2
-    templates:
-      - name: template2.j2
-        destination: /etc/template2.conf
-    scripts:
-      - hook: post-install
-        template: script2.j2
-  - name: Task 3
-    scripts:
-      - hook: pre-install
-        content: |
-          #!/bin/bash
-          echo "Pre-install script for Task 3"
-'''
-    with open(os.path.join(project_dir, "manifest.yml"), "w") as f:
-        f.write(example_manifest)
-
-    # Save example-vars.yml
-    example_vars = '''
-app_name: example-app
-app_version: 1.0.0
-
-server:
-  host: example.com
-  port: 8080
-
-database:
-  name: example-db
-  username: dbuser
-  password: dbpassword
-  host: db.example.com
-  port: 5432
-
-email:
-  smtp_host: smtp.example.com
-  smtp_port: 587
-  sender_email: noreply@example.com
-  sender_password: emailpassword
-'''
-    with open(os.path.join(project_dir, "vars.yml"), "w") as f:
-        f.write(example_vars)
+    
+    # Get the path to the example_project folder
+    example_project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'example_project')
+    
+    try:
+        # Copy the entire example_project folder to the specified project directory
+        shutil.copytree(example_project_dir, project_dir)
+    except FileNotFoundError as e:
+        print(f"Error: {e}\nMake sure the example_project directory exists in the script's folder.")
+    except shutil.Error as e:
+        print(f"Error while copying files: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
 def validate_manifest(manifest_data, schema_file="schema.json"):
     # Load the schema
