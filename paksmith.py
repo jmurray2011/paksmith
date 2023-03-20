@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     if args.command == "init":
         initialize(args.init_dir)
-    elif args.command == "validate_dir":
+    elif args.command == "validate":
         validate_project(args.validate_dir)
     elif args.command == "build":
         main(args.project_dir, verbose=args.verbose, destination=args.destination)
