@@ -1,75 +1,76 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "properties": {
-      "name": {"type": "string"},
-      "version": {"type": "string"},
-      "tasks": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "name": {"type": "string"},
-            "files": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {"type": "string"},
-                  "destination": {"type": "string"},
-                  "owner": {"type": "string"},
-                  "group": {"type": "string"},
-                  "mode": {"type": "string"}
-                },
-                "required": ["name", "destination"],
-                "dependencies": {
-                  "owner": ["group", "mode"],
-                  "group": ["owner", "mode"],
-                  "mode": ["owner", "group"]
-                }
-              }
-            },
-            "templates": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {"type": "string"},
-                  "destination": {"type": "string"},
-                  "owner": {"type": "string"},
-                  "group": {"type": "string"},
-                  "mode": {"type": "string"}
-                },
-                "required": ["name", "destination"],
-                "dependencies": {
-                  "owner": ["group", "mode"],
-                  "group": ["owner", "mode"],
-                  "mode": ["owner", "group"]
-                }
-              }
-            },
-            "scripts": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "hook": {"type": "string", "enum": ["pre-install", "post-install", "pre-uninstall", "post-uninstall"]},
-                  "name": {"type": "string"},
-                  "template": {"type": "string"},
-                  "content": {"type": "string"}
-                },
-                "required": ["hook"],
-                "oneOf": [
-                  {"required": ["name"]},
-                  {"required": ["template"]},
-                  {"required": ["content"]}
-                ]
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "name": {"type": "string"},
+    "version": {"type": "string"},
+    "type": {"type": "string", "enum": ["deb", "rpm"]},
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "destination": {"type": "string"},
+                "owner": {"type": "string"},
+                "group": {"type": "string"},
+                "mode": {"type": "string"}
+              },
+              "required": ["name", "destination"],
+              "dependencies": {
+                "owner": ["group", "mode"],
+                "group": ["owner", "mode"],
+                "mode": ["owner", "group"]
               }
             }
           },
-          "required": ["name"]
-        }
+          "templates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "destination": {"type": "string"},
+                "owner": {"type": "string"},
+                "group": {"type": "string"},
+                "mode": {"type": "string"}
+              },
+              "required": ["name", "destination"],
+              "dependencies": {
+                "owner": ["group", "mode"],
+                "group": ["owner", "mode"],
+                "mode": ["owner", "group"]
+              }
+            }
+          },
+          "scripts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "hook": {"type": "string", "enum": ["pre-install", "post-install", "pre-uninstall", "post-uninstall"]},
+                "name": {"type": "string"},
+                "template": {"type": "string"},
+                "content": {"type": "string"}
+              },
+              "required": ["hook"],
+              "oneOf": [
+                {"required": ["name"]},
+                {"required": ["template"]},
+                {"required": ["content"]}
+              ]
+            }
+          }
+        },
+        "required": ["name"]
       }
-    },
-    "required": ["name", "version", "tasks"]
+    }
+  },
+  "required": ["name", "version", "tasks", "type"]
 }

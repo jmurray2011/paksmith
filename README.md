@@ -1,18 +1,24 @@
 # `paksmith`
 
-This script is a tool for building .deb packages from a manifest file and a set of assets. It uses Jinja2 for templating and supports various hooks for running scripts at different stages of package installation or uninstallation.
+This script is a tool for building packages (for now, .deb and .rpm are supported) from a manifest file and a set of assets. It uses Jinja2 for templating and supports various hooks for running scripts at different stages of package installation or uninstallation.
 
 ## Requirements
 
 * Python 3.6+
 * Jinja2
 * FPM
+* `rpm` (for the `rpmbuild` command `fpm` relies on)
 
 ## Installation
 
 1. Install Python 3.6 or higher if you don't have it already.
 2. Install Jinja2: `pip install jinja2`
 3. Install FPM: https://fpm.readthedocs.io/en/v1.15.1/installation.html
+4. Install `rpm`: 
+```bash 
+# ubuntu
+sudo apt install -y rpm
+```
 
 ## Usage
 
@@ -47,12 +53,12 @@ project/
 
 3. Edit the `manifest.yml` and `vars.yml` files as needed.
 
-4. Build the .deb package:
+4. Build the package:
 ```bash
 python paksmith.py build /path/to/your/project [--destination /path/to/output] [--verbose]
 ```
 
-This will generate a .deb package in the specified destination directory or in the current working directory if the destination is not provided. Note that file permissions (for both files and templates placed by the package) will be `root:root` by default.
+This will generate a package in the specified destination directory or in the current working directory if the destination is not provided. Note that file permissions (for both files and templates placed by the package) will be `root:root` by default.
 
 ## manifest.yml format
 
@@ -61,6 +67,7 @@ The `manifest.yml` file defines the package information, tasks, files, templates
 ```yaml
 name: hello-world-webserver
 version: 1.0.0
+type: deb
 dependencies:
   - apache2
 tasks:
@@ -112,10 +119,15 @@ Here's a step-by-step guide on how to create a ```manifest.yml``` file, includin
 
 ## 1. Define basic package information:
 
-At the beginning of the ```manifest.yml``` file, specify the package name and version:
+At the beginning of the ```manifest.yml``` file, specify the package name, version, type (`deb` or `rpm`), and dependencies:
 ```yaml
 name: example-package
 version: 1.0.0
+type: deb
+dependencies:
+  - curl
+  - vim
+
 ```
 
 ## 2. Define tasks:
@@ -146,8 +158,8 @@ tasks:
 ```
 
 For each file or template, you need to provide the following information:
-- ```name```: The name of the file or template (including its extension) as it appears in your project's assets directory.
-- ```destination```: The path where the file or template should be placed in the package.
+- `name`: The name of the file or template (including its extension) as it appears in your project's assets directory.
+- `destination`: The path where the file or template should be placed in the package.
 
 ## 4. Specify optional file and template permissions:
 
