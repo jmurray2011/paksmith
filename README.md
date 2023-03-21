@@ -2,13 +2,6 @@
 
 This script is a tool for building packages (for now, .deb and .rpm are supported) from a manifest file and a set of assets. It uses Jinja2 for templating and supports various hooks for running scripts at different stages of package installation or uninstallation.
 
-## Requirements
-
-* Python 3.6+
-* Jinja2
-* FPM
-* `rpm` (for the `rpmbuild` command `fpm` relies on)
-
 ## Installation
 
 ### Prerequisites
