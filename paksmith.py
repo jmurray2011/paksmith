@@ -12,7 +12,7 @@ def setup_logging(verbose):
     logging.basicConfig(level=log_level, format='%(levelname)s: %(message)s')
 
 def create_parser():
-    parser = argparse.ArgumentParser(description="Paksmith - A tool for building {package_type} packages from a manifest file and a set of assets")
+    parser = argparse.ArgumentParser(description="Paksmith - A tool for building packages from a manifest file and a set of assets")
     subparsers = parser.add_subparsers(title="commands", dest="command", help="Available commands", required=True)
     return parser, subparsers
 
