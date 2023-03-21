@@ -1,23 +1,79 @@
-#! /usr/bin/env python3
-
-import shutil
-import tempfile
-import argparse
 import logging
+from yaml import MarkedYAMLError
+import yaml
+import shutil
+from jinja2 import Environment, FileSystemLoader, meta, Template, TemplateNotFound
 import os
-from utils import load_yaml_file, render_template, initialize, render_manifest_template, validate_project, process_asset
+import tempfile
+from .utils import validate_project
 
-def setup_logging(verbose):
+class TemplateRenderingError(Exception):
+    pass
+
+def generate_permission_script(file_path, owner, group, mode):
+    script = f"chown {owner}:{group} {file_path}\nchmod {mode} {file_path}"
+    return script
+
+# processes files and templates
+def process_asset(asset, asset_type, assets_dir, package_root, hooks, variables=None):
+    local_asset = os.path.join(assets_dir, asset_type, asset['name'])
+
+    if asset_type == "templates":
+        content = render_template(local_asset, variables)
+    elif asset_type == "files":
+        content = None
+
+    destination_asset = os.path.join(package_root, asset['destination'].lstrip('/'))
+    os.makedirs(os.path.dirname(destination_asset), exist_ok=True)
+
+    if content is not None:
+        with open(destination_asset, 'w') as f:
+            f.write(content)
+    else:
+        shutil.copy(local_asset, destination_asset)
+
+    if {'owner', 'group', 'mode'} <= set(asset.keys()):
+        permission_script = generate_permission_script(asset['destination'], asset['owner'], asset['group'], asset['mode'])
+        hooks['post-install'].append(permission_script)
+
+def load_yaml_file(file_path):
+    try:
+        with open(file_path, 'r') as stream:
+            return yaml.safe_load(stream)
+    except MarkedYAMLError as exc:
+        logging.error(f"YAML error on line {exc.problem_mark.line + 1}: {exc.problem}")
+        exit(1)
+    except Exception as exc:
+        logging.error(f"Error while loading YAML file: {exc}")
+        exit(1)
+
+def render_manifest_template(manifest_template, variables, output_file):
+    with open(manifest_template, "r") as template_file:
+        template_content = template_file.read()
+    rendered_content = Template(template_content).render(variables)
+    with open(output_file, "w") as manifest_file:
+        manifest_file.write(rendered_content)
+
+def render_template(template_path, variables):
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(f"Template file '{template_path}' not found.")
+
+    template_dir = os.path.dirname(template_path)
+    template_name = os.path.basename(template_path)
+    
+    env = Environment(loader=FileSystemLoader(template_dir))
+    
+    try:
+        template = env.get_template(template_name)
+    except TemplateNotFound:
+        raise TemplateRenderingError(f"Template '{template_name}' not found in '{template_dir}'")
+    
+    return template.render(**variables)
+
+def build_package(project_dir, destination=None, verbose=False):
     log_level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(level=log_level, format='%(levelname)s: %(message)s')
-
-def create_parser():
-    parser = argparse.ArgumentParser(description="Paksmith - A tool for building packages from a manifest file and a set of assets")
-    subparsers = parser.add_subparsers(title="commands", dest="command", help="Available commands", required=True)
-    return parser, subparsers
-
-def main(project_dir, verbose=False, destination=None):
-    setup_logging(verbose)
+    
     validate_project(project_dir)
     manifest_template = os.path.join(project_dir, "manifest.yml.j2")
     vars_file = os.path.join(project_dir, "vars.yml")
@@ -128,27 +184,3 @@ def main(project_dir, verbose=False, destination=None):
                     fpm_command += f" {destination_template}"
         logging.debug(f"Building {package_type} package with FPM...\n\n{fpm_command}")
         os.system(fpm_command)
-
-if __name__ == "__main__":
-    parser, subparsers = create_parser()
-    init_parser = subparsers.add_parser("init", help="Initialize a new project directory with example files")
-    init_parser.add_argument("init_dir", metavar="DIR", help="Path to the directory where the project will be initialized")
-
-    build_parser = subparsers.add_parser("build", help="Build a package from the project directory")
-    build_parser.add_argument("project_dir", metavar="DIR", help="Path to the project directory containing manifest.yml and assets")
-    build_parser.add_argument("-d", "--destination", metavar="DIR", help="Path to the directory where the package will be saved")
-    build_parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
-
-    validate_parser = subparsers.add_parser("validate", help="Validate the project structure and manifest file")
-    validate_parser.add_argument("validate_dir", metavar="DIR", help="Path to the project directory to validate")
-
-
-    args = parser.parse_args()
-    if args.command == "init":
-        initialize(args.init_dir)
-    elif args.command == "validate":
-        validate_project(args.validate_dir)
-    elif args.command == "build":
-        main(args.project_dir, verbose=args.verbose, destination=args.destination)
-    else:
-        logging.error("No action specified. Use '-h' or '--help' for help.")

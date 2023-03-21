@@ -1,83 +1,18 @@
-import os
 import json
 import yaml
-import shutil
 import jinja2
-import jsonschema
-from yaml import MarkedYAMLError
 from jsonschema import Draft7Validator
-from jinja2 import Environment, FileSystemLoader, meta, Template, TemplateNotFound
+import shutil
+import tempfile
 import logging
-
-logger = logging.getLogger(__name__)
+import os
 
 class InitializationError(Exception):
     pass
 
-class TemplateRenderingError(Exception):
-    pass
-
-def generate_permission_script(file_path, owner, group, mode):
-    script = f"chown {owner}:{group} {file_path}\nchmod {mode} {file_path}"
-    return script
-
-# processes files and templates
-def process_asset(asset, asset_type, assets_dir, package_root, hooks, variables=None):
-    local_asset = os.path.join(assets_dir, asset_type, asset['name'])
-
-    if asset_type == "templates":
-        content = render_template(local_asset, variables)
-    elif asset_type == "files":
-        content = None
-
-    destination_asset = os.path.join(package_root, asset['destination'].lstrip('/'))
-    os.makedirs(os.path.dirname(destination_asset), exist_ok=True)
-
-    if content is not None:
-        with open(destination_asset, 'w') as f:
-            f.write(content)
-    else:
-        shutil.copy(local_asset, destination_asset)
-
-    if {'owner', 'group', 'mode'} <= set(asset.keys()):
-        permission_script = generate_permission_script(asset['destination'], asset['owner'], asset['group'], asset['mode'])
-        hooks['post-install'].append(permission_script)
-
-def load_yaml_file(file_path):
-    try:
-        with open(file_path, 'r') as stream:
-            return yaml.safe_load(stream)
-    except MarkedYAMLError as exc:
-        logging.error(f"YAML error on line {exc.problem_mark.line + 1}: {exc.problem}")
-        exit(1)
-    except Exception as exc:
-        logging.error(f"Error while loading YAML file: {exc}")
-        exit(1)
-
-def render_manifest_template(manifest_template, variables, output_file):
-    with open(manifest_template, "r") as template_file:
-        template_content = template_file.read()
-    rendered_content = Template(template_content).render(variables)
-    with open(output_file, "w") as manifest_file:
-        manifest_file.write(rendered_content)
-
-def render_template(template_path, variables):
-    if not os.path.exists(template_path):
-        raise FileNotFoundError(f"Template file '{template_path}' not found.")
-
-    template_dir = os.path.dirname(template_path)
-    template_name = os.path.basename(template_path)
-    
-    env = Environment(loader=FileSystemLoader(template_dir))
-    
-    try:
-        template = env.get_template(template_name)
-    except TemplateNotFound:
-        raise TemplateRenderingError(f"Template '{template_name}' not found in '{template_dir}'")
-    
-    return template.render(**variables)
-
-def initialize(project_dir):
+def initialize(project_dir, verbose=False):
+    log_level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(level=log_level, format='%(levelname)s: %(message)s')
     if os.path.exists(project_dir):
         raise InitializationError(f"Directory '{project_dir}' already exists. Cannot initialize project there.")
     
@@ -128,7 +63,9 @@ def validate_templates(templates_dir, variables):
     if undefined_variables:
         raise ValueError(f"The following variables are undefined: {undefined_variables}")
 
-def validate_project(project_dir):
+def validate_project(project_dir, verbose=False):
+    log_level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(level=log_level, format='%(levelname)s: %(message)s')
     manifest_file = os.path.join(project_dir, "manifest.yml")
     vars_file = os.path.join(project_dir, "vars.yml")
     assets_dir = os.path.join(project_dir, "assets")
