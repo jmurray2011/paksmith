@@ -56,51 +56,44 @@ This will generate a .deb package in the specified destination directory or in t
 
 ## manifest.yml format
 
-The `manifest.yml` file defines the package information, tasks, files, templates, and scripts. Here's an example `manifest.yml` file:
+The `manifest.yml` file defines the package information, tasks, files, templates, and scripts. Here's an example `manifest.yml` file that sets up an Apache "Hello, World!" site:
 
 ```yaml
-name: example-package
+name: hello-world-webserver
 version: 1.0.0
 dependencies:
-- some-dependency
+  - apache2
 tasks:
-- name: Task 1
- files:
-   - name: example.txt
-     destination: /opt/example/example.txt
- templates:
-   - name: example.conf.j2
-     destination: /etc/example/example.conf
-     owner: ubuntu
-     group: ubuntu
-     mode: g+rwx
- scripts:
-   - hook: post-install
-     content: echo "Task 1 post-install script"
-- name: Task 2
- scripts:
-   - hook: pre-install
-     name: script1.sh
-   - hook: post-install
-     template: script2.sh.j2
+  - name: Setup Apache site
+    files:
+      - name: index.html
+        destination: /var/www/index.html
+        owner: www-data
+        group: www-data
+        mode: g+rwx
+    templates:
+      - name: hello_world.conf.j2
+        destination: /tmp/hello_world.conf
+    scripts:
+      - hook: post-install
+        content: |
+          #!/bin/bash
+          
+          a2dissite 000-default
+          sudo cp /tmp/hello_world.conf /etc/apache2/sites-available/
+          a2ensite hello_world
+          systemctl reload apache2
+          echo "Hello, world! webserver is now up and running."
 ```
 
 Note the optional:
 ```yaml
-     owner: ubuntu
-     group: ubuntu
-     mode: g+rwx
+    owner: www-data
+    group: www-data
+    mode: g+rwx
 ```
 
-When these are present (all three must be to pass validation), `paksmith` will automatically create an additional `post-install` script that sets permissions you've specified.
-
-## Manifest validation
-
-You can validate the project by running:
-
-```bash
-python paksmith.py validate /path/to/your/project
-```
+When these are present (all three must be to pass validation), `paksmith` will automatically create an additional `post-install` script that sets permissions you've specified. These options are available for both `files` and `templates`.
 
 ## vars.yml format
 
@@ -110,6 +103,7 @@ The `vars.yml` file contains variables that can be used in Jinja2 templates. Her
 variable1: value1
 variable2: value2
 ```
+
 # Creating `manifest.yml`
 
 To create a ```manifest.yml``` file for your packaging project, you'll need to follow a specific structure and include the necessary information to build the package. This file is crucial for defining how the package is built and the tasks involved in the process. 
