@@ -21,7 +21,7 @@ pip install virtualenv
 Navigate to the project directory and create a new virtual environment:
 
 ```bash
-Copy code
+#Copy code
 cd /path/to/paksmith
 virtualenv .venv
 ```
