@@ -5,7 +5,8 @@ import shutil
 from jinja2 import Environment, FileSystemLoader, meta, Template, TemplateNotFound
 import os
 import tempfile
-from .utils import validate_project
+from .utils import load_yaml_file
+from .validate import validate_project
 
 class TemplateRenderingError(Exception):
     pass
@@ -35,17 +36,6 @@ def process_asset(asset, asset_type, assets_dir, package_root, hooks, variables=
     if {'owner', 'group', 'mode'} <= set(asset.keys()):
         permission_script = generate_permission_script(asset['destination'], asset['owner'], asset['group'], asset['mode'])
         hooks['post-install'].append(permission_script)
-
-def load_yaml_file(file_path):
-    try:
-        with open(file_path, 'r') as stream:
-            return yaml.safe_load(stream)
-    except MarkedYAMLError as exc:
-        logging.error(f"YAML error on line {exc.problem_mark.line + 1}: {exc.problem}")
-        exit(1)
-    except Exception as exc:
-        logging.error(f"Error while loading YAML file: {exc}")
-        exit(1)
 
 def render_manifest_template(manifest_template, variables, output_file):
     with open(manifest_template, "r") as template_file:

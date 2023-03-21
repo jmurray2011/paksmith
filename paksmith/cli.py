@@ -1,8 +1,8 @@
 import click
 import logging
 from .build import build_package
-from .utils import initialize, validate_project
-
+from .validate import validate_project
+from .init import initialize
 
 def setup_logging(verbose):
     log_level = logging.DEBUG if verbose else logging.INFO
@@ -14,13 +14,18 @@ def setup_logging(verbose):
 def cli(ctx, verbose):
     ctx.ensure_object(dict)
     ctx.obj['verbose'] = verbose
-    setup_logging(verbose)
+    setup_logging(verbose=verbose)
 
 @cli.command()
 @click.argument('init_dir', metavar='DIR')
-def init(init_dir):
+@click.pass_context
+def init(ctx, init_dir):
+    verbose = ctx.obj['verbose']
     """Initialize a new project directory with example files."""
-    initialize(init_dir)
+    try: 
+        initialize(init_dir, verbose=verbose)
+    except Exception as e:
+        logging.error(e)
 
 @cli.command()
 @click.argument('project_dir', metavar='DIR')
