@@ -104,7 +104,6 @@ def validate_manifest(manifest_data, schema_file="schema.json"):
 
     # Check if the manifest is valid
     errors = sorted(validator.iter_errors(manifest_data), key=lambda e: e.path)
-
     if errors:
         for error in errors:
             task_name = ""
@@ -143,16 +142,3 @@ def validate_project(project_dir):
         logging.info("Project validation passed.")
     except Exception as e:
         logging.error(f"Project validation failed: {e}")
-
-def is_var_in_data(var, data):
-    if isinstance(data, dict):
-        if var in data:
-            return True
-        for key, value in data.items():
-            if is_var_in_data(var, value):
-                return True
-    elif isinstance(data, (list, tuple)):
-        for item in data:
-            if is_var_in_data(var, item):
-                return True
-    return False
