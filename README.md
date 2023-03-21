@@ -11,21 +11,72 @@ This script is a tool for building packages (for now, .deb and .rpm are supporte
 
 ## Installation
 
-1. Install Python 3.6 or higher if you don't have it already.
-2. Install Jinja2: `pip install jinja2`
-3. Install FPM: https://fpm.readthedocs.io/en/v1.15.1/installation.html
-4. Install `rpm`: 
-```bash 
-# ubuntu
-sudo apt install -y rpm
+### Prerequisites
+
+- Python 3.6 or higher
+- `rpm`
+- `fpm` (see https://fpm.readthedocs.io/en/v1.15.1/installation.html)
+
+### Install Virtualenv
+First, make sure you have `virtualenv` installed. If you don't have it installed, you can install it using `pip`:
+
+```bash
+pip install virtualenv
+```
+### Set up a virtual environment
+
+Navigate to the project directory and create a new virtual environment:
+
+```bash
+Copy code
+cd /path/to/paksmith
+virtualenv .venv
 ```
 
+#### Activate the virtual environment:
+
+For `bash` or `zsh`:
+```bash
+source .venv/bin/activate
+```
+
+### Install the project
+
+Install the project in the virtual environment:
+````bash
+pip install --editable .
+````
+
+### Add the virtual environment's bin directory to PATH (Optional)
+If you want to use the paksmith command without activating the virtual environment every time, you can add the virtual environment's bin directory to your PATH.
+
+For bash or zsh, add the following line to your ~/.bashrc or ~/.zshrc file:
+
+````bash
+export PATH="/path/to/paksmith/.venv/bin:$PATH"
+````
+
 ## Usage
+
+````bash
+Usage: paksmith [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  -v, --verbose  Enable verbose output
+  -h, --help     Show this message and exit.
+
+Commands:
+  build     Build a package from the project directory.
+  init      Initialize a new project directory with example files.
+  validate  Validate the project structure and manifest file.
+  ````
+
+### Example usage
 
 1. Initialize a new project directory with example files:
 
 ```bash
-python paksmith.py init /path/to/your/project
+paksmith [--verbose] init /path/to/your/project
 ```
 
 This will create a project directory with the following structure:
@@ -40,7 +91,7 @@ project/
 ├── manifest.yml.j2
 └── vars.yml
 ```
-- This is a working project that can be used via `python paksmith.py build /path/to/your/project`
+- This is a working project that can be used via `paksmith build /path/to/your/project`
 - `manifest.yml` contains the package information, tasks, files, templates, and scripts.
 - `manifest.yml.j2` is an example `manifest.yml` template. If this file is present it will be automatically rendered with variables from `vars.yml`, and any existing `manifest.yml` will be overwritten.
 - `vars.yml` contains variables that can be used in Jinja2 templates.
@@ -53,14 +104,19 @@ project/
 
 3. Edit the `manifest.yml` and `vars.yml` files as needed.
 
-4. Build the package:
+4. Validate the package:
+````bash
+paksmith [--verbose] validate /path/to/your/project
+````
+
+5. Build the package:
 ```bash
-python paksmith.py build /path/to/your/project [--destination /path/to/output] [--verbose]
+paksmith [--verbose] build [--destination /path/to/output] /path/to/your/project 
 ```
 
 This will generate a package in the specified destination directory or in the current working directory if the destination is not provided. Note that file permissions (for both files and templates placed by the package) will be `root:root` by default.
 
-## manifest.yml format
+## The Manifest
 
 The `manifest.yml` file defines the package information, tasks, files, templates, and scripts. Here's an example `manifest.yml` file that sets up an Apache "Hello, World!" site:
 
@@ -210,7 +266,7 @@ Make sure to use only one of these keys (```name```, ```template```, or ```conte
 Before using the manifest file to build the package, it's essential to validate its structure and content against the schema. You can validate the project by running:
 
 ```bash
-python paksmith.py validate /path/to/your/project
+paksmith [--verbose] validate /path/to/your/project
 ```
 
 ## 7. Considerations:

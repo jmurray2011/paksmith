@@ -20,8 +20,9 @@ def cli(ctx, verbose):
 @click.argument('init_dir', metavar='DIR')
 @click.pass_context
 def init(ctx, init_dir):
-    verbose = ctx.obj['verbose']
     """Initialize a new project directory with example files."""
+    verbose = ctx.obj['verbose']
+
     try: 
         initialize(init_dir, verbose=verbose)
     except Exception as e:
