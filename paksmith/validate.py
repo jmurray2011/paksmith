@@ -5,6 +5,9 @@ import logging
 from jsonschema import Draft7Validator
 from .utils import setup_logging, load_yaml_file
 
+class ValidationError(Exception):
+    pass
+
 def validate_manifest(manifest_data, schema_file="schema.json"):
     # Load the schema
     with open(schema_file, "r") as f:
@@ -58,4 +61,4 @@ def validate_project(project_dir, verbose):
         validate_templates(templates_dir, variables)
         logging.info("Project validation passed.")
     except Exception as e:
-        logging.error(f"Project validation failed: {e}")
+        raise ValidationError(f"Project validation failed: {e}")

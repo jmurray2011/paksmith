@@ -20,8 +20,9 @@ def initialize(project_dir, verbose=False):
         # Copy the entire example_project folder to the specified project directory
         shutil.copytree(example_project_dir, project_dir)
     except FileNotFoundError as e:
-        logging.error(f"Error: {e}\nMake sure the example_project directory exists in the script's folder.")
+        raise InitializationError(f"Error: {e}\nMake sure the example_project directory exists in the script's folder.")
     except shutil.Error as e:
-        logging.error(f"Error while copying files: {e}")
+        raise InitializationError(f"Error while copying files: {e}")
     except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+        raise InitializationError(f"Unexpected error: {e}")
+    logging.info(f'Project initialized: {project_dir}')
