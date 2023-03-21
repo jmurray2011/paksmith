@@ -7,6 +7,9 @@ import jsonschema
 from yaml import MarkedYAMLError
 from jsonschema import Draft7Validator
 from jinja2 import Environment, FileSystemLoader, meta, Template, TemplateNotFound
+import logging
+
+logger = logging.getLogger(__name__)
 
 class InitializationError(Exception):
     pass
@@ -45,10 +48,10 @@ def load_yaml_file(file_path):
         with open(file_path, 'r') as stream:
             return yaml.safe_load(stream)
     except MarkedYAMLError as exc:
-        print(f"YAML error on line {exc.problem_mark.line + 1}: {exc.problem}")
+        logging.error(f"YAML error on line {exc.problem_mark.line + 1}: {exc.problem}")
         exit(1)
     except Exception as exc:
-        print(f"Error while loading YAML file: {exc}")
+        logging.error(f"Error while loading YAML file: {exc}")
         exit(1)
 
 def render_manifest_template(manifest_template, variables, output_file):
@@ -85,11 +88,11 @@ def initialize(project_dir):
         # Copy the entire example_project folder to the specified project directory
         shutil.copytree(example_project_dir, project_dir)
     except FileNotFoundError as e:
-        print(f"Error: {e}\nMake sure the example_project directory exists in the script's folder.")
+        logging.error(f"Error: {e}\nMake sure the example_project directory exists in the script's folder.")
     except shutil.Error as e:
-        print(f"Error while copying files: {e}")
+        logging.error(f"Error while copying files: {e}")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logging.error(f"Unexpected error: {e}")
 
 def validate_manifest(manifest_data, schema_file="schema.json"):
     # Load the schema
@@ -108,7 +111,7 @@ def validate_manifest(manifest_data, schema_file="schema.json"):
             if "tasks" in error.absolute_path and isinstance(error.instance, dict) and "name" in error.instance:
                 task_name = f" in task '{error.instance['name']}'"
 
-            print(f"Validation error{task_name}: {error.message}. Please modify your manifest file accordingly")
+            logging.error(f"Validation error{task_name}: {error.message}. Please modify your manifest file accordingly")
         exit(1)
 
 def validate_templates(templates_dir, variables):
@@ -137,9 +140,9 @@ def validate_project(project_dir):
         variables = load_yaml_file(vars_file)
         validate_manifest(manifest)
         validate_templates(templates_dir, variables)
-        print("Project validation passed.")
+        logging.info("Project validation passed.")
     except Exception as e:
-        print(f"Project validation failed: {e}")
+        logging.error(f"Project validation failed: {e}")
 
 def is_var_in_data(var, data):
     if isinstance(data, dict):

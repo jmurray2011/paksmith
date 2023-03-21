@@ -3,12 +3,13 @@
 import shutil
 import tempfile
 import argparse
+import logging
 import os
 from utils import load_yaml_file, render_template, initialize, render_manifest_template, validate_project, process_asset
 
-def log(verbose, message):
-    if verbose:
-        print(message)
+def setup_logging(verbose):
+    log_level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(level=log_level, format='%(levelname)s: %(message)s')
 
 def create_parser():
     parser = argparse.ArgumentParser(description="Paksmith - A tool for building {package_type} packages from a manifest file and a set of assets")
@@ -16,6 +17,7 @@ def create_parser():
     return parser, subparsers
 
 def main(project_dir, verbose=False, destination=None):
+    setup_logging(verbose)
     validate_project(project_dir)
     manifest_template = os.path.join(project_dir, "manifest.yml.j2")
     vars_file = os.path.join(project_dir, "vars.yml")
@@ -47,24 +49,26 @@ def main(project_dir, verbose=False, destination=None):
 
     assets_dir = os.path.join(project_dir, "assets")
 
+    logging.info(f"Processing {project_dir}")
     with tempfile.TemporaryDirectory() as package_root:
         for task in manifest['tasks']:
-            log(verbose, f"Processing task: {task['name']}")
+            logging.debug(f"Processing task: {task['name']}")
 
-
-
-            # place files into the {package_type} filestructure according to their file['destination']
+            # place files into the filestructure according to their file['destination']
             if 'files' in task:
                 for file in task['files']:
+                    logging.debug(f'Adding file {file}')
                     process_asset(file, "files", assets_dir, package_root, hooks)
 
-            # place files into the {package_type} filestructure according to their template['destination']
+            # place rendered templates into the filestructure according to their template['destination']
             if 'templates' in task:
                 for template in task['templates']:
+                    logging.debug(f'Processing template {template}')
                     process_asset(template, "templates", assets_dir, package_root, hooks, variables)
 
             if 'scripts' in task:
                 for script in task['scripts']:
+                    logging.debug(f'Processing script {script}')
                     hook = script['hook']
                     script_content = None
 
@@ -108,7 +112,7 @@ def main(project_dir, verbose=False, destination=None):
                 pkg_file = os.path.join(destination, f"{package_name}-{package_version}-1.x86_64.{package_type}")
 
             if os.path.isfile(pkg_file):
-                log(verbose, f"Overwriting existing {package_type} file: {pkg_file}")
+                logging.info(f"Overwriting existing {package_type} file: {pkg_file}")
                 os.remove(pkg_file)
             fpm_command += f" -p '{destination}'"
 
@@ -122,9 +126,8 @@ def main(project_dir, verbose=False, destination=None):
                 for template in task['templates']:
                     destination_template = template['destination'].lstrip('/')
                     fpm_command += f" {destination_template}"
-        log(verbose, f"Building {package_type} package with FPM...\n\n{fpm_command}")
+        logging.debug(f"Building {package_type} package with FPM...\n\n{fpm_command}")
         os.system(fpm_command)
-        log(verbose, "Package built successfully.")
 
 if __name__ == "__main__":
     parser, subparsers = create_parser()
@@ -141,7 +144,6 @@ if __name__ == "__main__":
 
 
     args = parser.parse_args()
-
     if args.command == "init":
         initialize(args.init_dir)
     elif args.command == "validate":
@@ -149,4 +151,4 @@ if __name__ == "__main__":
     elif args.command == "build":
         main(args.project_dir, verbose=args.verbose, destination=args.destination)
     else:
-        print("No action specified. Use '-h' or '--help' for help.")
+        logging.error("No action specified. Use '-h' or '--help' for help.")
