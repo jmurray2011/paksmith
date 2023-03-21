@@ -2,6 +2,7 @@ import os
 import json
 import yaml
 import shutil
+import jinja2
 import jsonschema
 from yaml import MarkedYAMLError
 from jsonschema import Draft7Validator
@@ -110,29 +111,35 @@ def validate_manifest(manifest_data, schema_file="schema.json"):
             print(f"Validation error{task_name}: {error.message}. Please modify your manifest file accordingly")
         exit(1)
 
-def validate_template_variables(manifest_data, vars_data, assets_dir):
-  env = Environment(loader=FileSystemLoader(assets_dir))
+def validate_templates(templates_dir, variables):
+    undefined_variables = set()
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
+    for template_name in env.list_templates():
+        try:
+            template = env.get_template(template_name)
+            _ = template.render(variables)
+        except jinja2.UndefinedError as e:
+            undefined_variables.add(str(e))
+        except Exception as e:
+            continue
 
-  for task in manifest_data['tasks']:
-      if 'templates' in task:
-          for template in task['templates']:
-              template_name = template['name']
-              try:
-                  # Load the template
-                  tmpl = env.get_template(template_name)
+    if undefined_variables:
+        raise ValueError(f"The following variables are undefined: {undefined_variables}")
 
-                  # Find the variables used in the template
-                  ast = env.parse(tmpl.source)
-                  used_vars = meta.find_undeclared_variables(ast)
+def validate_project(project_dir):
+    manifest_file = os.path.join(project_dir, "manifest.yml")
+    vars_file = os.path.join(project_dir, "vars.yml")
+    assets_dir = os.path.join(project_dir, "assets")
+    templates_dir = os.path.join(assets_dir, "templates")
 
-                  # Check if all used variables are present in the vars_data
-                  for var in used_vars:
-                      if not is_var_in_data(var, vars_data):
-                          raise ValueError(f"Variable '{var}' in template '{template_name}' is not defined in vars.yml")
-
-              except Exception as e:
-                  print(f"Error validating template '{template_name}': {e}")
-                  exit(1)
+    try:
+        manifest = load_yaml_file(manifest_file)
+        variables = load_yaml_file(vars_file)
+        validate_manifest(manifest)
+        validate_templates(templates_dir, variables)
+        print("Project validation passed.")
+    except Exception as e:
+        print(f"Project validation failed: {e}")
 
 def is_var_in_data(var, data):
     if isinstance(data, dict):

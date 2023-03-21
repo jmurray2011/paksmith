@@ -4,7 +4,7 @@ import shutil
 import tempfile
 import argparse
 import os
-from utils import load_yaml_file, render_template, initialize, render_manifest_template, validate_manifest, process_asset
+from utils import load_yaml_file, render_template, initialize, render_manifest_template, validate_project, process_asset
 
 def log(verbose, message):
     if verbose:
@@ -14,20 +14,6 @@ def create_parser():
     parser = argparse.ArgumentParser(description="Paksmith - A tool for building {package_type} packages from a manifest file and a set of assets")
     subparsers = parser.add_subparsers(title="commands", dest="command", help="Available commands", required=True)
     return parser, subparsers
-
-def validate_project(project_dir):
-    manifest_file = os.path.join(project_dir, "manifest.yml")
-    vars_file = os.path.join(project_dir, "vars.yml")
-    assets_dir = os.path.join(project_dir, "assets")
-
-    try:
-        manifest = load_yaml_file(manifest_file)
-        variables = load_yaml_file(vars_file)
-        validate_manifest(manifest)
-        # validate_template_variables(manifest, variables, assets_dir)
-        print("Project validation passed.")
-    except Exception as e:
-        print(f"Project validation failed: {e}")
 
 def main(project_dir, verbose=False, destination=None):
     validate_project(project_dir)
