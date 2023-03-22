@@ -64,7 +64,7 @@ def build_package(project_dir, destination=None, verbose=False):
     log_level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(level=log_level, format='%(levelname)s: %(message)s')
     
-    validate_project(project_dir)
+    validate_project(project_dir, verbose=verbose)
     manifest_template = os.path.join(project_dir, "manifest.yml.j2")
     vars_file = os.path.join(project_dir, "vars.yml")
     variables = load_yaml_file(vars_file)
